@@ -1,0 +1,12 @@
+name: go-carbon
+version: 0.0.1
+appVersion: 0.12.0
+kubeVersion: "^1.8.0-0"
+description: Golang implementation of Graphite/Carbon server with classic architecture.
+home: https://github.com/lomik/go-carbon/releases
+sources:
+  - https://github.com/lomik/go-carbon
+maintainers:
+  - name: skaarj
+    email: shaarj.sergey@gmail.com
+engine: gotpl

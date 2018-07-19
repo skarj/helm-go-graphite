@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "gocarbon.fullname" . }}
+  labels:
+    app: {{ template "gocarbon.name" . }}
+    chart: {{ template "gocarbon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+{{- with .Values.service.annotations }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  {{- range $key, $value := .Values.service.ports }}
+    - name: {{ $key }}
+{{ toYaml $value | indent 6 }}
+  {{- end }}
+  selector:
+    app: {{ template "gocarbon.name" . }}
+    release: {{ .Release.Name }}
+{{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+{{- end }}
