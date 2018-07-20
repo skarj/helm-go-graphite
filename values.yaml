@@ -1,7 +1,7 @@
 carbon:
   ## Go-carbon server container name
   ##
-  name: go-carbon
+  name: carbon
 
   ## Go-carbon server container image
   ##
@@ -32,24 +32,6 @@ carbon:
     #   - graphite.domain.com
     #   - domain.com/graphite
 
-  ## Server Deployment Strategy type
-  # strategy:
-  #   type: Recreate
-
-  ## Node tolerations for server scheduling to nodes with taints
-  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-  ##
-  tolerations: []
-    # - key: "key"
-    #   operator: "Equal|Exists"
-    #   value: "value"
-    #   effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
-
-  ## Node labels for Go-carbon server pod assignment
-  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
   ## Annotations to be added to Go-carbon server pods
   ##
   podAnnotations: {}
@@ -67,10 +49,6 @@ carbon:
     # requests:
     #   cpu: 500m
     #   memory: 512Mi
-
-  ## Security context to be added to server pods
-  ##
-  securityContext: {}
 
   service:
     annotations: {}
@@ -101,11 +79,74 @@ carbon:
 api:
   ## API server container name
   ##
-  name: carbonapi
+  name: api
 
   ## API server container image
   ##
   image:
     repository: openmetric/carbonapi
-    tag: v0.12.0-rc1
+    tag: 0.10.0.1
     pullPolicy: IfNotPresent
+
+  ## kube-state-metrics priorityClassName
+  ##
+  priorityClassName: ""
+
+  ## kube-state-metrics container arguments
+  ##
+  args: {}
+
+  ## Node tolerations for kube-state-metrics scheduling to nodes with taints
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  tolerations: []
+    # - key: "key"
+    #   operator: "Equal|Exists"
+    #   value: "value"
+    #   effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
+
+  ## Node labels for kube-state-metrics pod assignment
+  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+
+  ## Annotations to be added to kube-state-metrics pods
+  ##
+  podAnnotations: {}
+
+  pod:
+    labels: {}
+
+  replicaCount: 1
+
+  ## kube-state-metrics resource requests and limits
+  ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+    # limits:
+    #   cpu: 10m
+    #   memory: 16Mi
+    # requests:
+    #   cpu: 10m
+    #   memory: 16Mi
+
+  ## Security context to be added to kube-state-metrics pods
+  ##
+  securityContext: {}
+
+  service:
+    labels: {}
+
+    # Exposed as a headless service:
+    # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
+    clusterIP: None
+
+    ## List of IP addresses at which the kube-state-metrics service is available
+    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ##
+    externalIPs: []
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 5000
+    type: ClusterIP

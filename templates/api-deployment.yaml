@@ -1,0 +1,89 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+{{- if .Values.api.deploymentAnnotations }}
+  annotations:
+{{ toYaml .Values.api.deploymentAnnotations | indent 4 }}
+{{- end }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.api.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "gographite.api.fullname" . }}
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  template:
+    metadata:
+    {{- if .Values.api.podAnnotations }}
+      annotations:
+{{ toYaml .Values.api.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        app: {{ template "gographite.name" . }}
+        component: "{{ .Values.api.name }}"
+        release: {{ .Release.Name }}
+{{- if .Values.api.pod.labels }}
+{{ toYaml .Values.api.pod.labels | indent 8 }}
+{{- end }}
+    spec:
+{{- if .Values.api.priorityClassName }}
+      priorityClassName: "{{ .Values.api.priorityClassName }}"
+{{- end }}
+      containers:
+        - name: {{ template "gographite.name" . }}-{{ .Values.api.name }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: "{{ .Values.api.image.pullPolicy }}"
+        {{- if .Values.api.args }}
+          args:
+          {{- range $key, $value := .Values.api.args }}
+            - --{{ $key }}={{ $value }}
+          {{- end }}
+        {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /lb_check
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /lb_check
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          resources:
+{{ toYaml .Values.api.resources | indent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /openmetric/conf/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "gographite.api.fullname" . }}
+    {{- if .Values.api.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.api.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.api.securityContext }}
+      securityContext:
+{{ toYaml .Values.api.securityContext | indent 8 }}
+    {{- end }}
+    {{- if .Values.api.tolerations }}
+      tolerations:
+{{ toYaml .Values.api.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.api.affinity }}
+      affinity:
+{{ toYaml .Values.api.affinity | indent 8 }}
+    {{- end }}
