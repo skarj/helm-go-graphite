@@ -1,4 +1,4 @@
-name: go-carbon
+name: go-graphite
 version: 0.0.1
 appVersion: 0.12.0
 kubeVersion: "^1.8.0-0"
@@ -8,5 +8,5 @@ sources:
   - https://github.com/lomik/go-carbon
 maintainers:
   - name: skaarj
-    email: shaarj.sergey@gmail.com
+    email: skaarj.sergey@gmail.com
 engine: gotpl

@@ -1,0 +1,89 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+{{- if .Values.carbon.deploymentAnnotations }}
+  annotations:
+{{ toYaml .Values.carbon.deploymentAnnotations | indent 4 }}
+{{- end }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.carbon.name }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  name: {{ template "gographite.carbon.fullname" . }}
+spec:
+  replicas: {{ .Values.carbon.replicaCount }}
+  serviceName: {{ template "gographite.carbon.fullname" . }}
+  selector:
+    matchLabels:
+      app: {{ template "gographite.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+    {{- if .Values.carbon.podAnnotations }}
+      annotations:
+{{ toYaml .Values.carbon.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        app: {{ template "gographite.name" . }}
+        component: "{{ .Values.carbon.name }}"
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ template "gographite.name" . }}-{{ .Values.carbon.name }}-{{ .Values.carbon.name }}
+          image: "{{ .Values.carbon.image.repository }}:{{ .Values.carbon.image.tag }}"
+          imagePullPolicy: "{{ .Values.carbon.image.pullPolicy }}"
+          ports:
+            - name: carbontcp
+              containerPort: 2003
+              protocol: TCP
+            - name: carbonserver
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /metrics/find/?query=*&format=json
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /metrics/find/?query=*&format=json
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          resources:
+{{ toYaml .Values.carbon.resources | indent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /openmetric/conf/
+            - name: storage-volume
+              mountPath: /openmetric/data/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "gographite.carbon.fullname" . }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.carbon.persistence.accessModes | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.carbon.persistence.size | quote }}
+      {{- if .Values.carbon.persistence.storageClassName }}
+        {{- if (eq "-" .Values.carbon.persistence.storageClassName) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.carbon.persistence.storageClassName }}"
+        {{- end }}
+      {{- end }}

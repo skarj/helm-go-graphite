@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.carbon.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "gographite.carbon.fullname" . }}
+data:
+  carbon.conf: |
+    [common]
+    user = ""
+    graph-prefix = "openmetric.carbon.{host}"
+    metric-endpoint = "local"
+    metric-interval = "10s"
+    max-cpu = 1
+
+    [whisper]
+    data-dir = "/openmetric/data/whisper/"
+    schemas-file = "/openmetric/conf/schemas.conf"
+    aggregation-file = ""
+    workers = 1
+    max-updates-per-second = 1000
+    sparse-create = false
+    enabled = true
+
+    [cache]
+    max-size = 1000000
+    write-strategy = "noop"
+
+    [tcp]
+    enabled = true
+    listen = ":2003"
+    buffer-size = 0
+
+    [carbonserver]
+    enabled = true
+    listen = ":8080"
+    buckets = 10
+    max-globs = 1000
+    metrics-as-counters = false
+    read-timeout = "1m0s"
+    write-timeout = "1m0s"
+    scan-frequency = "5m0s"
+
+    [[logging]]
+    file = "stdout"
+    level = "info"
+    encoding = "mixed"
+    encoding-time = "iso8601"
+    encoding-duration = "seconds"
+  schemas.conf: |
+    # each datapoint requires 12 Bytes
+
+    # all openmetric components' metrics are prefixed with "openmetric.$component.$host."
+    [openmetric]
+    pattern = ^openmetric\.
+    retentions = 10s:1d,60s:30d
+    # 8640 + 43200 = 51840 points, 622080 Bytes (about 607KB)
+
+    [default]
+    pattern = .*
+    retentions = 10s:2h,60s:1d,600s:30d,3600s:1y
+    # 720 + 1440 + 4320 + 8760 = 15240 points, 182800 Bytes (about 178KB)
