@@ -1,0 +1,25 @@
+{{- if and .Values.carbon.persistence.enabled (not .Values.carbon.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "gographite.carbon.fullname" . }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.carbon.name }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  {{- with .Values.carbon.persistence.annotations  }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- range .Values.carbon.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.carbon.persistence.size | quote }}
+  storageClassName: {{ .Values.carbon.persistence.storageClassName }}
+{{- end -}}

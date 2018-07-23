@@ -14,6 +14,8 @@ metadata:
   name: {{ template "gographite.api.fullname" . }}
 spec:
   replicas: {{ .Values.api.replicaCount }}
+  strategy:
+    type: {{ .Values.carbon.deploymentStrategy }}
   template:
     metadata:
     {{- if .Values.api.podAnnotations }}
@@ -28,6 +30,9 @@ spec:
 {{ toYaml .Values.api.pod.labels | indent 8 }}
 {{- end }}
     spec:
+{{- if .Values.carbon.schedulerName }}
+      schedulerName: "{{ .Values.carbon.schedulerName }}"
+{{- end }}
 {{- if .Values.api.priorityClassName }}
       priorityClassName: "{{ .Values.api.priorityClassName }}"
 {{- end }}

@@ -23,7 +23,7 @@ data:
     graphite:
       host: relay:2003
       interval: "10s"
-      prefix: "openmetric.api"
+      prefix: "gographite.api"
       pattern: "{prefix}.{fqdn}"
     idleConnections: 10
     pidFile: ""
@@ -37,7 +37,7 @@ data:
       keepAliveInterval: "30s"
       maxIdleConnsPerHost: 100
       backends:
-        - "http://carbon:8080"
+        - "http://{{ template "gographite.carbon.fullname" . }}:8080"
       graphite09compat: false
     logger:
       - logger: ""

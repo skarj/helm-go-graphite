@@ -1,11 +1,14 @@
 name: go-graphite
-version: 0.0.1
+version: 0.1.0
 appVersion: 0.12.0
 kubeVersion: "^1.8.0-0"
 description: Golang implementation of Graphite/Carbon server with classic architecture.
-home: https://github.com/lomik/go-carbon/releases
+home: https://github.com/lomik/go-carbon
 sources:
+  - https://github.com/grobian/carbon-c-relay
   - https://github.com/lomik/go-carbon
+  - https://github.com/go-graphite/carbonapi
+  - https://github.com/grafana/grafana
 maintainers:
   - name: skaarj
     email: skaarj.sergey@gmail.com

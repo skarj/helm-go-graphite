@@ -1,5 +1,5 @@
 apiVersion: apps/v1beta2
-kind: StatefulSet
+kind: Deployment
 metadata:
 {{- if .Values.carbon.deploymentAnnotations }}
   annotations:
@@ -14,11 +14,12 @@ metadata:
   name: {{ template "gographite.carbon.fullname" . }}
 spec:
   replicas: {{ .Values.carbon.replicaCount }}
-  serviceName: {{ template "gographite.carbon.fullname" . }}
   selector:
     matchLabels:
       app: {{ template "gographite.name" . }}
       release: {{ .Release.Name }}
+  strategy:
+    type: {{ .Values.carbon.deploymentStrategy }}
   template:
     metadata:
     {{- if .Values.carbon.podAnnotations }}
@@ -30,6 +31,9 @@ spec:
         component: "{{ .Values.carbon.name }}"
         release: {{ .Release.Name }}
     spec:
+{{- if .Values.carbon.schedulerName }}
+      schedulerName: "{{ .Values.carbon.schedulerName }}"
+{{- end }}
       containers:
         - name: {{ template "gographite.name" . }}-{{ .Values.carbon.name }}-{{ .Values.carbon.name }}
           image: "{{ .Values.carbon.image.repository }}:{{ .Values.carbon.image.tag }}"
@@ -70,20 +74,10 @@ spec:
         - name: config-volume
           configMap:
             name: {{ template "gographite.carbon.fullname" . }}
-
-  volumeClaimTemplates:
-    - metadata:
-        name: storage-volume
-      spec:
-        accessModes:
-          - {{ .Values.carbon.persistence.accessModes | quote }}
-        resources:
-          requests:
-            storage: {{ .Values.carbon.persistence.size | quote }}
-      {{- if .Values.carbon.persistence.storageClassName }}
-        {{- if (eq "-" .Values.carbon.persistence.storageClassName) }}
-        storageClassName: ""
-        {{- else }}
-        storageClassName: "{{ .Values.carbon.persistence.storageClassName }}"
-        {{- end }}
-      {{- end }}
+        - name: storage-volume
+      {{- if .Values.carbon.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.carbon.persistence.existingClaim | default (include "gographite.carbon.fullname" .) }}
+      {{- else }}
+          emptyDir: {}
+      {{- end -}}

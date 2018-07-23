@@ -12,7 +12,7 @@ data:
   carbon.conf: |
     [common]
     user = ""
-    graph-prefix = "openmetric.carbon.{host}"
+    graph-prefix = "gographite.carbon.{host}"
     metric-endpoint = "local"
     metric-interval = "10s"
     max-cpu = 1
@@ -54,9 +54,9 @@ data:
   schemas.conf: |
     # each datapoint requires 12 Bytes
 
-    # all openmetric components' metrics are prefixed with "openmetric.$component.$host."
-    [openmetric]
-    pattern = ^openmetric\.
+    # all gographite components' metrics are prefixed with "gographite.$component.$host."
+    [gographite]
+    pattern = ^gographite\.
     retentions = 10s:1d,60s:30d
     # 8640 + 43200 = 51840 points, 622080 Bytes (about 607KB)
 
