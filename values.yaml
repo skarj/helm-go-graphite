@@ -73,7 +73,7 @@ carbon:
   ##
   persistence:
     enabled: false
-    # storageClassName: default
+    # storageClassName: standard
     # accessModes:
     #   - ReadWriteOnce
     # size: 10Gi
@@ -257,7 +257,7 @@ grafana:
   ##
   persistence:
     enabled: false
-    # storageClassName: default
+    # storageClassName: standard
     # accessModes:
     #   - ReadWriteOnce
     # size: 10Gi
@@ -301,7 +301,7 @@ grafana:
       datasources:
         - name: Go-graphite
           type: graphite
-          url: http://test-go-graphite-api:5000
+          url: http://test-go-graphite-api:5000 # waiting for https://github.com/helm/helm/issues/2133
           access: proxy
           isDefault: true
           editable: false
