@@ -1,0 +1,92 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+{{- if .Values.relay.deploymentAnnotations }}
+  annotations:
+{{ toYaml .Values.relay.deploymentAnnotations | indent 4 }}
+{{- end }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.relay.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "gographite.relay.fullname" . }}
+spec:
+  replicas: {{ .Values.relay.replicaCount }}
+  strategy:
+    type: {{ .Values.carbon.deploymentStrategy }}
+  template:
+    metadata:
+    {{- if .Values.relay.podAnnotations }}
+      annotations:
+{{ toYaml .Values.relay.podAnnotations | indent 8 }}
+    {{- end }}
+      labels:
+        app: {{ template "gographite.name" . }}
+        component: "{{ .Values.relay.name }}"
+        release: {{ .Release.Name }}
+{{- if .Values.relay.pod.labels }}
+{{ toYaml .Values.relay.pod.labels | indent 8 }}
+{{- end }}
+    spec:
+{{- if .Values.carbon.schedulerName }}
+      schedulerName: "{{ .Values.carbon.schedulerName }}"
+{{- end }}
+{{- if .Values.relay.priorityClassName }}
+      priorityClassName: "{{ .Values.relay.priorityClassName }}"
+{{- end }}
+      containers:
+        - name: {{ template "gographite.name" . }}-{{ .Values.relay.name }}
+          image: "{{ .Values.relay.image.repository }}:{{ .Values.relay.image.tag }}"
+          imagePullPolicy: "{{ .Values.relay.image.pullPolicy }}"
+        {{- if .Values.relay.args }}
+          args:
+          {{- range $key, $value := .Values.relay.args }}
+            - --{{ $key }}={{ $value }}
+          {{- end }}
+        {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 2003
+          readinessProbe:
+            tcpSocket:
+              port: 2003
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          livenessProbe:
+            tcpSocket:
+              port: 2003
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 6
+            successThreshold: 1
+          resources:
+{{ toYaml .Values.relay.resources | indent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /openmetric/conf/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "gographite.relay.fullname" . }}
+    {{- if .Values.relay.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.relay.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.relay.securityContext }}
+      securityContext:
+{{ toYaml .Values.relay.securityContext | indent 8 }}
+    {{- end }}
+    {{- if .Values.relay.tolerations }}
+      tolerations:
+{{ toYaml .Values.relay.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.relay.affinity }}
+      affinity:
+{{ toYaml .Values.relay.affinity | indent 8 }}
+    {{- end }}

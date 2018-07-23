@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.relay.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "gographite.relay.fullname" . }}
+data:
+  relay.conf: |
+    cluster default
+        fnv1a_ch replication 1
+            {{ template "gographite.carbon.fullname" . }}:2003
+        ;
+
+    statistics
+        submit every 10 seconds
+        prefix with gographite.relay.\.1
+        send to
+            default
+        stop
+        ;
+
+    match *
+        send to
+            default
+        stop
+        ;

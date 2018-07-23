@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.relay.service.annotations }}
+  annotations:
+{{ toYaml .Values.relay.service.annotations | indent 4 }}
+{{- end }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.relay.name }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.relay.service.labels }}
+{{ toYaml .Values.relay.service.labels | indent 4 }}
+{{- end }}
+  name: {{ template "gographite.relay.fullname" . }}
+spec:
+{{- if .Values.relay.service.clusterIP }}
+  clusterIP: {{ .Values.relay.service.clusterIP }}
+{{- end }}
+{{- if .Values.relay.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.relay.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.relay.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.relay.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.relay.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- range $cidr := .Values.relay.service.loadBalancerSourceRanges }}
+    - {{ $cidr }}
+  {{- end }}
+{{- end }}
+  ports:
+    - name: tcp
+      port: {{ .Values.relay.service.servicePort }}
+      protocol: TCP
+      targetPort: 2003
+  selector:
+    app: {{ template "gographite.name" . }}
+    component: "{{ .Values.relay.name }}"
+    release: {{ .Release.Name }}
+  type: "{{ .Values.relay.service.type }}"
