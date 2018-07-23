@@ -1,0 +1,30 @@
+{{- if .Values.grafana.ingress.enabled -}}
+{{- $releaseName := .Release.Name -}}
+{{- $serviceName := include "gographite.grafana.fullname" . }}
+{{- $servicePort := .Values.grafana.service.servicePort -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+{{- if .Values.grafana.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.grafana.ingress.annotations | indent 4 }}
+{{- end }}
+  labels:
+    app: {{ template "gographite.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    component: "{{ .Values.grafana.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+{{- range $key, $value := .Values.grafana.ingress.extraLabels }}
+    {{ $key }}: {{ $value }}
+{{- end }}
+  name: {{ template "gographite.grafana.fullname" . }}
+spec:
+  backend:
+    serviceName: {{ template "gographite.grafana.fullname" . }}
+    servicePort: 3000
+{{- if .Values.grafana.ingress.tls }}
+  tls:
+{{ toYaml .Values.grafana.ingress.tls | indent 4 }}
+  {{- end -}}
+{{- end -}}

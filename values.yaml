@@ -136,10 +136,7 @@ api:
 
   service:
     labels: {}
-
-    # Exposed as a headless service:
-    # https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
-    clusterIP: None
+    clusterIP: ""
 
     ## List of IP addresses at which the kube-state-metrics service is available
     ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
@@ -150,3 +147,106 @@ api:
     loadBalancerSourceRanges: []
     servicePort: 5000
     type: ClusterIP
+
+
+grafana:
+  ## API server container name
+  ##
+  name: grafana
+
+  ## API server container image
+  ##
+  image:
+    repository: openmetric/grafana
+    tag: v5.0.0
+    pullPolicy: IfNotPresent
+
+  ## kube-state-metrics priorityClassName
+  ##
+  priorityClassName: ""
+
+  ## kube-state-metrics container arguments
+  ##
+  args: {}
+
+  ## Node tolerations for kube-state-metrics scheduling to nodes with taints
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  tolerations: []
+    # - key: "key"
+    #   operator: "Equal|Exists"
+    #   value: "value"
+    #   effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
+
+  ## Node labels for kube-state-metrics pod assignment
+  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+
+  ## Annotations to be added to kube-state-metrics pods
+  ##
+  podAnnotations: {}
+
+  pod:
+    labels: {}
+
+  replicaCount: 1
+
+  ## kube-state-metrics resource requests and limits
+  ## Ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+    # limits:
+    #   cpu: 10m
+    #   memory: 16Mi
+    # requests:
+    #   cpu: 10m
+    #   memory: 16Mi
+
+  ## Security context to be added to kube-state-metrics pods
+  ##
+  securityContext: {}
+
+  service:
+    labels: {}
+    clusterIP: ""
+
+    ## List of IP addresses at which the kube-state-metrics service is available
+    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ##
+    externalIPs: []
+
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: 3000
+    type: LoadBalancer
+
+  ingress:
+    ## If true, grafana Ingress will be created
+    ##
+    enabled: false
+
+    ## grafana Ingress annotations
+    ##
+    annotations: {}
+    #   kubernetes.io/ingress.class: nginx
+    #   kubernetes.io/tls-acme: 'true'
+
+    ## grafana Ingress additional labels
+    ##
+    extraLabels: {}
+
+    ## grafana Ingress hostnames with optional path
+    ## Must be provided if Ingress is enabled
+    ##
+    hosts: []
+    #   - grafana.domain.com
+    #   - domain.com/grafana
+
+    ## grafana Ingress TLS configuration
+    ## Secrets must be manually created in the namespace
+    ##
+    tls: []
+    #   - secretName: grafana-tls
+    #     hosts:
+    #       - grafana.domain.com
