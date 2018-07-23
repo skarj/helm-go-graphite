@@ -40,8 +40,8 @@ To access Grafana:
 {{- end -}}
 
 {{- if not .Values.carbon.persistence.enabled }}
-##########################################################################
-######   WARNING: Persistence for Carbon pod is disabled!!!          #####
-######   You will lose your data when the Carbon pod is terminated.  #####
-##########################################################################
+############################################################################
+######   WARNING: Persistence for Carbon pod is disabled!!!            #####
+######   You will lose all metrics when the Carbon pod is terminated.  #####
+############################################################################
 {{- end }}

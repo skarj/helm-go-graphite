@@ -264,7 +264,8 @@ grafana:
 
   image:
     repository: grafana/grafana
-    tag: 5.2.1
+    # tag: 5.2.1 # there is a problem with persitent storage permissions on versions greater than 5.0.0
+    tag: 5.0.0
     pullPolicy: IfNotPresent
 
     ## Optionally specify an array of imagePullSecrets.
@@ -336,11 +337,11 @@ grafana:
   ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
   ##
   persistence:
-    enabled: false
-    # storageClassName: standard
-    # accessModes:
-    #   - ReadWriteOnce
-    # size: 10Gi
+    enabled: true
+    storageClassName: standard
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
     # annotations: {}
     # subPath: ""
     # existingClaim:
