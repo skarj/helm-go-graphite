@@ -10,6 +10,7 @@ metadata:
   name: {{ template "gographite.api.fullname" . }}
 data:
   api.yaml: |
+    # https://github.com/go-graphite/carbonapi/blob/master/cmd/carbonapi/carbonapi.example.yaml
     listen: ":8080"
     concurrency: 20
     cache:

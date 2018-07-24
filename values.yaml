@@ -291,7 +291,8 @@ grafana:
   ## ref: http://kubernetes.io/docs/user-guide/services/
   ##
   service:
-    type: LoadBalancer
+    type: ClusterIP
+    # type: LoadBalancer
     port: 80
     annotations: {}
     labels: {}
