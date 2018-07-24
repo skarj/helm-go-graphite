@@ -1,45 +1,67 @@
 {{- if and .Values.grafana.enabled }}
-To access Grafana:
-1. Get your '{{ .Values.grafana.adminUser }}' user password by running:
+To access Grafana get your '{{ .Values.grafana.adminUser }}' user password by running:
 
-   kubectl get secret --namespace {{ .Release.Namespace }} {{ .Release.Name }}-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+    kubectl get secret --namespace {{ .Release.Namespace }} {{ .Release.Name }}-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
-2. The Grafana server can be accessed via port {{ .Values.grafana.service.port }} on the following DNS name from within your cluster:
+The Grafana server can be accessed via port {{ .Values.grafana.service.port }} on the following DNS name from within your cluster:
 
-   {{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local
+    {{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local
 {{ if .Values.grafana.ingress.enabled }}
-   From outside the cluster, the server URL(s) are:
+From outside the cluster, the server URL(s) are:
 {{- range .Values.grafana.ingress.hosts }}
-     http://{{ . }}
+    http://{{ . }}
 {{- end }}
 {{ else }}
-   Get the Grafana URL to visit by running these commands in the same shell:
-{{ if contains "NodePort" .Values.grafana.service.type -}}
-    export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-grafana)
-    export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-    echo http://$NODE_IP:$NODE_PORT
-{{ else if contains "LoadBalancer" .Values.grafana.service.type -}}
-    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-    You can watch the status of by running 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ .Release.Name }}-grafana'
-    export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ .Release.Name }}-grafana -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-    http://$SERVICE_IP:{{ .Values.grafana.service.port -}}
+Get the Grafana URL to visit by running these commands in the same shell:
+{{ if contains "NodePort" .Values.grafana.service.type }}
+    export GRAFANA_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-grafana)
+    export GRAFANA_NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+    echo http://$GRAFANA_NODE_IP:$GRAFANA_NODE_PORT
+{{ else if contains "LoadBalancer" .Values.grafana.service.type }}
+    export GRAFANA_SERVICE_IP=$(kubectl get svc --namespace default {{ .Release.Name }}-grafana -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    echo http://$GRAFANA_SERVICE_IP:80
+
+NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+You can watch the status of by running 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ .Release.Name }}-grafana'
 {{ else if contains "ClusterIP"  .Values.grafana.service.type }}
-    export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ .Release.Name }}-grafana,component={{ .Values.name }}" -o jsonpath="{.items[0].metadata.name}")
-    kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 3000
+    export GRAFANA_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ .Release.Name }}-grafana,component=grafana" -o jsonpath="{.items[0].metadata.name}")
+    kubectl --namespace {{ .Release.Namespace }} port-forward $GRAFANA_POD_NAME 3000
 {{- end }}
 {{- end }}
-
-3. Login with the password from step 1 and the username: {{ .Values.grafana.adminUser }}
-
 {{- if not .Values.grafana.persistence.enabled }}
 ###########################################################################
 ######   WARNING: Persistence for Grafana pod is disabled!!!          #####
 ######   You will lose your data when the Grafana pod is terminated.  #####
 ###########################################################################
 {{- end }}
-{{- end -}}
+{{- end }}
 
+The Graphite service can be accessed via port {{ .Values.carbon.service.carbontcpPort }} on the following DNS name from within your cluster:
+
+    {{ template "gographite.carbon.fullname" . }}
+{{ if .Values.carbon.ingress.enabled }}
+    From outside the cluster, the server URL(s) are:
+{{- range .Values.carbon.ingress.hosts }}
+    http://{{ . }}
+{{- end }}
+{{ else }}
+Get the Graphite URL by running these commands in the same shell:
+{{ if contains "NodePort" .Values.carbon.service.type }}
+    export CARBON_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ .Release.Name }}-grafana)
+    export CARBON_NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+    echo tcp://$CARBON_NODE_IP:$CARBON_NODE_PORT
+{{ else if contains "LoadBalancer" .Values.carbon.service.type }}
+    export CARBON_SERVICE_IP=$(kubectl get svc --namespace default test-carbon -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    echo tcp://$CARBON_SERVICE_IP:80
+    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+    You can watch the status of by running 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ template "gographite.name" . }}'
+{{ else if contains "ClusterIP"  .Values.carbon.service.type }}
+    export CARBON_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "gographite.name" . }},component={{ .Values.carbon.name }}" -o jsonpath="{.items[0].metadata.name}")
+    kubectl --namespace {{ .Release.Namespace }} port-forward $CARBON_POD_NAME 2003
+{{- end }}
+{{- end }}
 {{- if not .Values.carbon.persistence.enabled }}
+
 ############################################################################
 ######   WARNING: Persistence for Carbon pod is disabled!!!            #####
 ######   You will lose all metrics when the Carbon pod is terminated.  #####
