@@ -1,0 +1,48 @@
+sudo: required
+dist: trusty
+
+env:
+  - CHANGE_MINIKUBE_NONE_USER=true
+
+before_install:
+  # make root mounted as rshared to fix kube-dns issues.
+  - sudo mount --make-rshared /
+  # install nsenter for helm and port forwarding
+  - sudo apt-get -qq update
+  - sudo apt-get install -y socat
+  - docker run --rm jpetazzo/nsenter cat /nsenter > /tmp/nsenter && chmod +x /tmp/nsenter
+  - sudo cp /tmp/nsenter /usr/local/bin
+
+stages:
+  - name: chart-test
+  - name: chart-install
+
+jobs:
+  include:
+    - stage: chart-test
+      name: chart-test
+      script:
+        - docker run --rm -v "$(pwd):/workdir" --workdir /workdir gcr.io/kubernetes-charts-ci/chart-testing:v1.0.2 chart_test.sh --config test/.testenv
+    - stage: chart-install
+      name: chart-install
+      script:
+        - curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.11.1/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.2/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        - sudo minikube start --vm-driver=none --kubernetes-version=v1.9.0 --bootstrapper=localkube --feature-gates=CustomResourceSubresources=true --extra-config=apiserver.Authorization.Mode=RBAC
+        - minikube update-context
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
+        - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+        - kubectl -n kube-system create sa tiller
+        - kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+        - kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+        - helm init --service-account tiller
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -n kube-system -l "app=helm,name=tiller" -o jsonpath="{.items[0].metadata.name}") -n kube-system --timeout=60s
+        - helm repo add incubator https://kubernetes-charts.storage.googleapis.com/
+        - helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+        - helm dependency update .
+        - helm install . --name test --values=values.yaml
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=carbon,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=api,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=relay,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=grafana,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl get pods

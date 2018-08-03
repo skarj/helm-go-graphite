@@ -1,0 +1,5 @@
+TIMEOUT=600
+
+CHART_DIRS=(
+    .
+)
