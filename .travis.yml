@@ -41,8 +41,8 @@ jobs:
         - helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
         - helm dependency update .
         - helm install . --name test --values=values.yaml
-        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=carbon,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
-        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=api,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
-        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=relay,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=go-graphite-carbon,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=go-graphite-api,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
+        - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=go-graphite-relay,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
         - kubectl wait --for=condition=ready pod/$(kubectl get pods -l "app=grafana,release=test" -o jsonpath="{.items[0].metadata.name}") --timeout=120s
         - kubectl get pods
