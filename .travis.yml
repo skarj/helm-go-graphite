@@ -22,7 +22,7 @@ jobs:
     - stage: chart-test
       name: chart-test
       script:
-        - docker run --rm -v "$(pwd):/workdir" --workdir /workdir gcr.io/kubernetes-charts-ci/chart-testing:v1.0.2 chart_test.sh --config test/.testenv
+        - docker run --rm -v "$(pwd):/workdir" --workdir /workdir gcr.io/kubernetes-charts-ci/chart-testing:v1.0.2 chart_test.sh --config test/.testenv --no-install
     - stage: chart-install
       name: chart-install
       script:
