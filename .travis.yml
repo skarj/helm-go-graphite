@@ -37,7 +37,6 @@ jobs:
         - kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
         - helm init --service-account tiller
         - kubectl wait --for=condition=ready pod/$(kubectl get pods -n kube-system -l "app=helm,name=tiller" -o jsonpath="{.items[0].metadata.name}") -n kube-system --timeout=60s
-        - helm repo add incubator https://kubernetes-charts.storage.googleapis.com/
         - helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
         - helm dependency update .
         - helm install . --name test --values=values.yaml
